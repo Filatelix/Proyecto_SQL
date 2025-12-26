@@ -385,3 +385,305 @@ limit 5;
 select concat("first_name", ' ', "last_name") as "Nombre_Actor"
 from "actor"
 where "first_name" in('JOHNNY');
+
+/*
+36. Renombra la columna “first_nameˮ como Nombre y “last_nameˮ como Apellido.
+ */
+
+select "first_name" as "Nombre", "last_name" as "Apellido"
+from "actor";
+
+/*
+37. Encuentra el ID del actor más bajo y más alto en la tabla actor.
+ */
+
+select
+	min("actor_id") as "id_mínimo",
+	max("actor_id") as "id_máximo"
+from "actor";
+
+/*
+38. Cuenta cuántos actores hay en la tabla “actorˮ.
+ */
+
+select count("actor_id") as "Número_Actores"
+from "actor";
+
+/*
+39. Selecciona todos los actores y ordénalos por apellido en orden ascendente.
+ */
+
+select concat("first_name", ' ', "last_name") as "Nombre_Actor"
+from "actor"
+order by "last_name" asc;
+
+/*
+40. Selecciona las primeras 5 películas de la tabla “filmˮ.
+ */
+
+select "title"
+from "film"
+order by "film_id" asc
+limit 5;
+
+/*
+41. Agrupa los actores por su nombre y cuenta cuántos actores tienen el mismo nombre. ¿Cuál es el nombre más repetido?.
+ */
+
+select "first_name", count("first_name") as "Repeticiones"
+from "actor"
+group by "first_name"
+order by "Repeticiones" desc;
+
+/*
+42. Encuentra todos los alquileres y los nombres de los clientes que los realizaron.
+ */
+
+select
+	"rental"."rental_id",
+	concat("customer"."first_name", ' ', "customer"."last_name") as "Nombre_Cliente"
+from "rental"
+-- Unimos la tabla customer para obtener los nombres de quienes realizaron el alquiler
+left join "customer"
+on "rental"."customer_id" = "customer"."customer_id";
+
+/*
+43. Muestra todos los clientes y sus alquileres si existen, incluyendo aquellos que no tienen alquileres.
+ */
+
+select
+	concat("customer"."first_name", ' ', "customer"."last_name") as "Nombre_Cliente",
+	"rental"."rental_id"
+from "customer"
+-- Unimos la tabla rental para obtener los alquileres que han realizado
+left join "rental"
+on "customer"."customer_id" = "rental"."customer_id"
+order by "Nombre_Cliente";
+
+/*
+44. Realiza un CROSS JOIN entre las tablas film y category. ¿Aporta valor esta consulta? ¿Por qué?
+Deja después de la consulta la contestación.
+ */
+
+select
+	"film"."title",
+	"category"."name"
+from "film"
+cross join "category";
+
+/*
+Esta consulta no tiene sentido porque crea una fila de cada polícula combinándola con cada categoría. Esto no nos dice nada porque
+a una película no le pueden corresponder todas las categorías.
+ */
+
+/*
+45. Encuentra los actores que han participado en películas de la categoría 'Action'.
+ */
+
+select
+	concat("actor"."first_name", ' ', "actor"."last_name") as "Nombre_Actor",
+	"category"."name"
+from "actor"
+-- Unimos la tabla film_actor para luego poder unir la tabla film_category
+left join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film_category para luego poder unir la tabla category
+left join "film_category"
+on "film_actor"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener el nombre de la categoría
+left join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Ponemos la condición de que sólo muestre los actores con la categoría 'Action'
+where "category"."name" = 'Action';
+
+/*
+46. Encuentra todos los actores que no han participado en películas.
+ */
+
+select concat("actor"."first_name", ' ', "actor"."last_name") as "Nombre_Actor"
+from "actor"
+-- Unimos la tabla film_actor para luego poder unir la tabla film
+left join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film para poder obtener las películas en las que han participado
+left join "film"
+on "film"."film_id" = "film_actor"."film_id"
+-- Ponemos la condición de que sólo muestre los actores sin película
+where "film"."film_id" is null;
+
+/*
+47. Selecciona el nombre de los actores y la cantidad de películas en las que han participado.
+ */
+
+select
+	concat("actor"."first_name", ' ', "actor"."last_name") as "Nombre_Actor",
+	count("film"."film_id") as "Número_Películas"
+from "actor"
+-- Unimos la tabla film_actor para luego poder unir la tabla film
+left join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film para poder obtener las películas en las que han participado
+left join "film"
+on "film"."film_id" = "film_actor"."film_id"
+-- Agrupamos por el actor_is para contar las películas en las que ha participado
+group by "actor"."actor_id"
+order by "Número_Películas" desc;
+
+/*
+48. Crea una vista llamada “actor_num_peliculasˮ que muestre los nombres de los actores y el número de películas
+en las que han participado.
+ */
+
+create view actor_num_peliculas as
+select
+	concat("actor"."first_name", ' ', "actor"."last_name") as "Nombre_Actor",
+	count("film"."film_id") as "Número_Películas"
+from "actor"
+-- Unimos la tabla film_actor para luego poder unir la tabla film
+left join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film para poder obtener las películas en las que han participado
+left join "film"
+on "film"."film_id" = "film_actor"."film_id"
+-- Agrupamos por el actor_is para contar las películas en las que ha participado
+group by "actor"."actor_id";
+
+/*
+49. Calcula el número total de alquileres realizados por cada cliente.
+ */
+
+select
+	concat("customer"."first_name", ' ', "customer"."last_name") as "Nombre_Cliente",
+	count("rental"."rental_id") as "Número_Alquileres"
+from "customer"
+-- Unimos la tabla rental para obtener los datos de los alquileres
+left join "rental"
+on "customer"."customer_id" = "rental"."customer_id"
+-- Agrupamos por customer_id para contar los alquileres que han realizado
+group by "customer"."customer_id"
+order by "Número_Alquileres" desc;
+
+/*
+50. Calcula la duración total de las películas en la categoría 'Action'.
+ */
+
+select sum("film"."length") as "Duración_Total"
+from "film"
+-- Unimos la tabla film_category para obtener el category_id
+inner join "film_category"
+on "film"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener el nombre de las categorías
+inner join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Ponemos la condición de que sólo cuente las películas con la categoría 'Action'
+where "category"."name" = 'Action';
+
+/*
+51. Crea una tabla temporal llamada “cliente_rentas_temporalˮ para almacenar el total de alquileres por cliente.
+ */
+
+create temporary table cliente_rentas_temporal as
+select
+	concat("customer"."first_name", ' ', "customer"."last_name") as "Nombre_Cliente",
+	count("rental"."rental_id") as "Número_Alquileres"
+from "customer"
+-- Unimos la tabla rental para obtener los datos de los alquileres
+left join "rental"
+on "customer"."customer_id" = "rental"."customer_id"
+-- Agrupamos por customer_id para contar los alquileres que han realizado
+group by "customer"."customer_id";
+
+/*
+52. Crea una tabla temporal llamada “peliculas_alquiladasˮ que almacene las películas que han sido alquiladas al menos 10 veces.
+ */
+
+create temporary table películas_alquiladas as
+select
+	"film"."title",
+	count("rental"."rental_id") as "Número_Alquileres"
+from "film"
+-- Unimos la tabla inventory para obtener el inventory_id
+inner join "inventory"
+on "film"."film_id" = "inventory"."film_id"
+-- Unimos la tabla rental para obtener los datos de alquileres
+inner join "rental"
+on "rental"."inventory_id" = "inventory"."inventory_id"
+-- Agrupamos por title y filtramos por los que tienen al menos 10 alquileres
+group by "film"."title"
+having count("rental"."rental_id") > 9;
+
+/*
+53. Encuentra el título de las películas que han sido alquiladas por el cliente con el nombre ‘Tammy Sandersʼ y
+que aún no se han devuelto. Ordena los resultados alfabéticamente por título de película.
+ */
+
+select "film"."title"
+from "customer"
+-- Unimos la tabla rental para obtener la información de alquileres
+inner join "rental"
+on "customer"."customer_id" = "rental"."customer_id"
+-- Unimos la tabla invenotry para después poder unir la tabla film
+inner join "inventory"
+on "rental"."inventory_id" = "inventory"."inventory_id"
+-- Unimos la tabla film para obtener la información sobre los títulos de las películas
+inner join "film"
+on "inventory"."film_id" = "film"."film_id"
+-- Ponemos las condiciones del nombre y la fecha de devolución, y ordenamos por título
+where "customer"."first_name" = 'TAMMY'
+and "customer"."last_name" = 'SANDERS'
+and "rental"."return_date" is null
+order by "film"."title" asc;
+
+/*
+54. Encuentra los nombres de los actores que han actuado en al menos una película que pertenece a la categoría ‘Sci-Fiʼ.
+Ordena los resultados alfabéticamente por apellido.
+ */
+
+select distinct(concat("actor"."first_name", ' ', "actor"."last_name")) as "Nombre_Actor"
+from "actor"
+-- Unimos la tabla film_actor para obtener el film_id
+inner join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film_category para obtener el category_id
+inner join "film_category"
+on "film_actor"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener el dato del nombre de la categoría
+inner join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Ponemos el filtro de la categoría 'Sci-Fi'
+where "category"."name" = 'Sci-Fi'
+order by "Nombre_Actor" asc;
+
+/*
+55. Encuentra el nombre y apellido de los actores que han actuado en películas que se alquilaron después de que
+la película ‘Spartacus Cheaperʼ se alquilara por primera vez. Ordena los resultados alfabéticamente por apellido.
+ */
+
+select distinct
+	"actor"."first_name",
+	"actor"."last_name"
+from "actor"
+-- Unimos la tabla film_actor para obtener el film_id
+inner join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film inventory para obtener el inventory_id
+inner join "inventory"
+on "film_actor"."film_id" = "inventory"."film_id"
+-- unimos la tabla rental para obtener la información sobre alquileres
+inner join "rental"
+on "inventory"."inventory_id" = "rental"."inventory_id"
+-- Añadimos una subconsulta para hacer el filtro de la fecha de alquiler basada en el primer alquiler de 'Spartacus Cheaper'
+where "rental"."rental_date" > (
+	-- Seleccionamos la fecha mínima, es decir, la primera fecha
+	select min("rental"."rental_date")
+	from "film"
+	-- Unimos la tabla inventory para obtener el inventory_id
+	inner join "inventory"
+	on "film"."film_id" = "inventory"."film_id"
+	-- Unimos la table rental para obtener la información sobre los alquileres
+	inner join "rental"
+	on "inventory"."inventory_id" = "rental"."inventory_id"
+	-- Añadimos la condicion de el título sea 'Spartacus Cheaper'
+	where "film"."title" = 'SPARTACUS CHEAPER')
+-- Ordenamos por el apellido del actor
+order by "actor"."last_name" asc;
