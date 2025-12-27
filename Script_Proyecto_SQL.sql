@@ -666,7 +666,7 @@ from "actor"
 -- Unimos la tabla film_actor para obtener el film_id
 inner join "film_actor"
 on "actor"."actor_id" = "film_actor"."actor_id"
--- Unimos la tabla film inventory para obtener el inventory_id
+-- Unimos la tabla inventory para obtener el inventory_id
 inner join "inventory"
 on "film_actor"."film_id" = "inventory"."film_id"
 -- unimos la tabla rental para obtener la información sobre alquileres
@@ -687,3 +687,160 @@ where "rental"."rental_date" > (
 	where "film"."title" = 'SPARTACUS CHEAPER')
 -- Ordenamos por el apellido del actor
 order by "actor"."last_name" asc;
+
+/*
+56. Encuentra el nombre y apellido de los actores que no han actuado en ninguna película de la categoría ‘Musicʼ.
+ */
+
+select distinct
+	"actor"."first_name",
+	"actor"."last_name"
+from "actor"
+-- Unimos la tabla film_actor para obtener el film_id
+left join "film_actor"
+on "actor"."actor_id" = "film_actor"."actor_id"
+-- Unimos la tabla film_category para obtener el category_id
+left join "film_category"
+on "film_actor"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener la categoría 'Music'
+left join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Ponemos la condición que no hayan actuado en ninguna película 'Music'
+and "category"."name" = 'Music'
+where "category"."name" is null;
+
+/*
+57. Encuentra el título de todas las películas que fueron alquiladas por más de 8 días.
+ */
+
+select distinct "film"."title"
+from "film"
+-- Unimos la tabla inventory para obtener el inventory_id
+left join "inventory"
+on "film"."film_id" = "inventory"."film_id"
+-- Unimos la tabla rental para obtener las fechas del alquiler
+left join "rental"
+on "inventory"."inventory_id" = "rental"."inventory_id"
+-- Ponemos la condición de la duración del alquiler superior a 8 días
+where ("rental"."return_date" - "rental"."rental_date") > interval '8 days';
+
+/*
+58. Encuentra el título de todas las películas que son de la misma categoría que ‘Animationʼ.
+ */
+
+select "film"."title"
+from "film"
+-- Unimos la tabla film_category para obtener el category_id
+inner join "film_category"
+on "film"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener la categoría 'Animation'
+inner join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Ponemos la condición de que sean de la categoría 'Animation'
+where "category"."name" = 'Animation';
+
+/*
+59. Encuentra los nombres de las películas que tienen la misma duración que la película con el título ‘Dancing Feverʼ.
+Ordena los resultados alfabéticamente por título de película.
+ */
+
+select "title"
+from "film"
+-- Hacemos el filtro de las películas que duren lo mismo que 'Dancing Fever'
+where "length" = (
+	select "length"
+	from "film"
+	where "title" = 'DANCING FEVER')
+order by "title";
+
+/*
+60. Encuentra los nombres de los clientes que han alquilado al menos 7 películas distintas. Ordena los resultados alfabéticamente
+por apellido.
+ */
+
+select
+	"customer"."first_name",
+	"customer"."last_name"
+from "customer"
+-- Unimos la tabla rental para obtener el inventory_id
+inner join "rental"
+on "customer"."customer_id" = "rental"."customer_id"
+-- Unimos la tabla inventory para obtener el film_id
+inner join "inventory"
+on "rental"."inventory_id" = "inventory"."inventory_id"
+-- Unimos la tabla film para obtener los títulos de las películas
+inner join "film"
+on "inventory"."film_id" = "film"."film_id"
+-- Agrupamos por customer_id y añadimos el filtro
+group by "customer"."customer_id"
+having count(distinct "film"."film_id") > 6
+order by "customer"."last_name";
+
+/*
+61. Encuentra la cantidad total de películas alquiladas por categoría y muestra el nombre de la categoría junto con el
+recuento de alquileres.
+ */
+
+select
+	"category"."name",
+	count(*) as "Número_ALquileres"
+from "rental"
+-- Unimos la tabla inventory para obtener el film_id
+inner join "inventory"
+on "rental"."inventory_id" = "inventory"."inventory_id"
+-- Unimos la tabla film_category para obtener el category_id
+inner join "film_category"
+on "inventory"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener el nombre de las categorías
+inner join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Agrupamos por la categoría y ordenamos
+group by "category"."name"
+order by count(*) desc;
+
+/*
+62. Encuentra el número de películas por categoría estrenadas en 2006.
+ */
+
+select
+	"category"."name",
+	count("film"."film_id") as "Número_Estrenos"
+from "film"
+-- Unimos la tabla film_category para obtener el category_id
+inner join "film_category"
+on "film"."film_id" = "film_category"."film_id"
+-- Unimos la tabla category para obtener el nombre de las categorías
+inner join "category"
+on "film_category"."category_id" = "category"."category_id"
+-- Filtramos por las películas que se han estrenado en 2006, agrupamos por categoría y ordenamos
+where "film"."release_year" = '2006'
+group by "category"."name"
+order by count("film"."film_id") desc;
+
+/*
+63. Obtén todas las combinaciones posibles de trabajadores con las tiendas que tenemos.
+ */
+
+select
+	concat("staff"."last_name", ', ', "staff"."first_name") as "Nombre_Empleado",
+	"store"."store_id"
+from "staff"
+cross join "store";
+
+/*
+64. Encuentra la cantidad total de películas alquiladas por cada cliente y muestra el ID del cliente,
+su nombre y apellido junto con la cantidad de películas alquiladas.
+ */
+
+select
+	"customer"."customer_id",
+	"customer"."first_name",
+	"customer"."last_name",
+	count("rental"."rental_id") as "Número_Alquileres"
+from "customer"
+-- Unimos la tabla rentals para obtener la información sobre alquileres
+inner join "rental"
+on "customer"."customer_id" = "rental"."customer_id"
+-- Agrupamos por customer_id, contamos y ordenamos
+group by "customer"."customer_id"
+order by count("rental"."rental_id") desc;
