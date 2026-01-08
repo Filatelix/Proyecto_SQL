@@ -291,7 +291,7 @@ select
 	"film"."title",
 	count("inventory"."inventory_id") as "Total_Inventario"
 from "film"
-- Unimos la tabla inventory para obtener el inventario de las películas
+-- Unimos la tabla inventory para obtener el inventario de las películas
 left join "inventory"
 on "film"."film_id" = "inventory"."film_id"
 group by "film"."title";
@@ -705,8 +705,8 @@ on "film_actor"."film_id" = "film_category"."film_id"
 -- Unimos la tabla category para obtener la categoría 'Music'
 left join "category"
 on "film_category"."category_id" = "category"."category_id"
--- Ponemos la condición que no hayan actuado en ninguna película 'Music'
 and "category"."name" = 'Music'
+-- Ponemos la condición que no hayan actuado en ninguna película 'Music'
 where "category"."name" is null;
 
 /*
@@ -844,3 +844,4 @@ on "customer"."customer_id" = "rental"."customer_id"
 -- Agrupamos por customer_id, contamos y ordenamos
 group by "customer"."customer_id"
 order by count("rental"."rental_id") desc;
+
